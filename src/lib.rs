@@ -502,6 +502,7 @@ pub struct CategoryChildren {
 /// See [Fred docs: /fred/category/related](https://fred.stlouisfed.org/docs/api/fred/category_related.html).
 #[derive(Debug, Deserialize)]
 pub struct CategoryRelated {
+    #[allow(dead_code)]
     categories:                     Vec<Category>,
 }
 
