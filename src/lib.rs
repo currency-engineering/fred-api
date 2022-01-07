@@ -602,7 +602,7 @@ impl fmt::Display for SeriesItems {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut s = KeyTreeString::new();
         for (i, series) in self.0.iter().enumerate() {
-            s.push_value(0, "series", &i.to_string());
+            s.push_keyvalue(0, "series", &i.to_string());
             s.push_keytree(1, series.keytree());
         };
         write!(f, "{}", s)
@@ -869,8 +869,8 @@ impl IntoKeyTree for Series {
     fn keytree(&self) -> KeyTreeString {
         let mut s = KeyTreeString::new();
         s.push_key(0, "series");
-        s.push_value(1, "realtime_start", &self.realtime_start);
-        s.push_value(1, "realtime_end", &self.realtime_end);
+        s.push_keyvalue(1, "realtime_start", &self.realtime_start);
+        s.push_keyvalue(1, "realtime_end", &self.realtime_end);
         s.push_keytree(1, self.seriess.keytree());
         s
     } 
@@ -906,18 +906,18 @@ impl SeriesItem {
     pub fn keytree(&self) -> KeyTreeString {
         let mut s = KeyTreeString::new();
         s.push_key(0, "series_item");
-        s.push_value(1, "id", &self.id);
-        s.push_value(1, "realtime_start", &self.realtime_start);
-        s.push_value(1, "realtime_end", &self.realtime_end);
-        s.push_value(1, "title", &self.title);
-        s.push_value(1, "observation_start", &self.observation_start);
-        s.push_value(1, "observation_end", &self.observation_end);
-        s.push_value(1, "frequency", &self.frequency);
-        s.push_value(1, "units", &self.units);
-        s.push_value(1, "units_short", &self.units_short);
-        s.push_value(1, "seasonal_adjustment", &self.seasonal_adjustment);
-        s.push_value(1, "last_updated", &self.last_updated);
-        s.push_value(1, "notes", "(see JSON data for notes)");
+        s.push_keyvalue(1, "id", &self.id);
+        s.push_keyvalue(1, "realtime_start", &self.realtime_start);
+        s.push_keyvalue(1, "realtime_end", &self.realtime_end);
+        s.push_keyvalue(1, "title", &self.title);
+        s.push_keyvalue(1, "observation_start", &self.observation_start);
+        s.push_keyvalue(1, "observation_end", &self.observation_end);
+        s.push_keyvalue(1, "frequency", &self.frequency);
+        s.push_keyvalue(1, "units", &self.units);
+        s.push_keyvalue(1, "units_short", &self.units_short);
+        s.push_keyvalue(1, "seasonal_adjustment", &self.seasonal_adjustment);
+        s.push_keyvalue(1, "last_updated", &self.last_updated);
+        s.push_keyvalue(1, "notes", "(see JSON data for notes)");
         s
     }
 
