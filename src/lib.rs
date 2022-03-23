@@ -1,15 +1,18 @@
 //! [Fred API key](https://fred.stlouisfed.org/docs/api/api_key.html) needs to
 //! be stored as the environment variable FRED_API_KEY.
+//!
+//! See the `Fred` struct for examples.
 
 use err::*;
 use keytree::serialize::{
     KeyTreeString,
     IntoKeyTree,
 };
-use serde::{Deserialize};
+use serde::Deserialize;
+use serde::de::DeserializeOwned;
 use std::{
     env,
-    fmt::self,
+    fmt::{Display, self},
     iter::Iterator,
 };
 
@@ -17,6 +20,9 @@ type Result<T> = std::result::Result<T, Error>;
 
 pub struct Fred;
 
+// The functions in this impl should concisely encapsulate information abou the requests together
+// with the response type, in a coded form. This passes off the plumbing to the req() functions. It
+// might be worth trying to make this into a macro.
 impl Fred {
     /// [Get a category](https://fred.stlouisfed.org/docs/api/fred/category.html)
     /// ```
@@ -28,359 +34,262 @@ impl Fred {
     /// }
     /// ```
     pub fn category(category_id: usize) -> Result<Categories> { 
-        let response = response(
+        req(
             "category",
-            vec!(
-                format!("category_id={}", category_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("category_id", category_id)],
+        )
     }
 
     /// [Get the child categories for a specified parent category.](https://fred.stlouisfed.org/docs/api/fred/category_children.html)
     pub fn category_children(category_id: usize) -> Result<Categories> {
-        let response = response(
+        req(
             "category/children",
-            vec!(
-                format!("category_id={}", category_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("category_id", category_id)],
+        )
     }
     
     /// [Get the related categories for a category.](https://fred.stlouisfed.org/docs/api/fred/category_related.html)
     pub fn category_related(category_id: usize) -> Result<Categories> {
-        let response = response(
+        req(
             "category/related",
-            vec!(
-                format!("category_id={}", category_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("category_id", category_id)],
+        )
     }
     
     /// [Get the series in a category.](https://fred.stlouisfed.org/docs/api/fred/category_series.html)
-    /// ```
-    /// match Fred::category_series(9) {
-    ///     Ok(category_series) => println!("{}", category_series),
-    ///     Err(serde_err) => println!("{}", serde_err),
-    /// };
-    /// ```
     pub fn category_series(category_id: usize) -> Result<CategorySeries> {
-        let response = response(
+        req(
             "category/series",
-            vec!(
-                format!("category_id={}", category_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("category_id", category_id)],
+        )
     }
     
     /// [Get the tags for a category.](https://fred.stlouisfed.org/docs/api/fred/category_tags.html)
     pub fn category_tags(category_id: usize) -> Result<CategoryTags> {
-        let response = response(
+        req(
             "category/tags",
-            vec!(
-                format!("category_id={}", category_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("category_id", category_id)],
+        )
     }
     
     /// [Get the related tags for a category.](https://fred.stlouisfed.org/docs/api/fred/category_related_tags.html)
-    pub fn category_related_tags(category_id: usize, tag_names: &str) -> Result<CategoryRelatedTags> {
-        let response = response(
+    pub fn category_related_tags<T: std::fmt::Display>(category_id: T, tag_names: T) -> Result<CategoryRelatedTags> {
+        req(
             "category/related_tags",
-            vec!(
-                format!("category_id={}", category_id),
-                format!("tag_names={}", tag_names),
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("category_id", category_id), ("tag_names", tag_names)],
+        )
     }
 
     /// [Get all releases of economic data.](https://fred.stlouisfed.org/docs/api/fred/releases.html)
     pub fn releases() -> Result<Releases> { 
-        let response = response(
+        req(
             "releases",
-            Vec::new(),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            Vec::<(&'static str, String)>::new(),
+        )
     }
 
     /// [Get release dates for all releases of economic data.](https://fred.stlouisfed.org/docs/api/fred/releases_dates.html)
     pub fn releases_dates() -> Result<ReleaseDates> { 
-        let response = response(
+        req(
             "releases/dates",
-            Vec::new(),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            Vec::<(&'static str, String)>::new(),
+        )
     }
 
     /// [Get a release of economic data.](https://fred.stlouisfed.org/docs/api/fred/release.html)
     pub fn release(release_id: usize) -> Result<Release> { 
-        let response = response(
+        req(
             "release",
-            vec!(
-                format!("release_id={}", release_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("release_id", release_id)],
+        )
     }
 
     /// [Get release dates for a release of economic data.](https://fred.stlouisfed.org/docs/api/fred/release_dates.html)
     pub fn release_dates(release_id: usize) -> Result<ReleaseDates> { 
-        let response = response(
+        req(
             "release/dates",
-            vec!(
-                format!("release_id={}", release_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("release_id", release_id)],
+        )
     }
 
     /// [Get the series on a release of economic data.](https://fred.stlouisfed.org/docs/api/fred/release_series.html)
     pub fn release_series(release_id: usize) -> Result<ReleaseSeries> { 
-        let response = response(
+        req(
             "release/series",
-            vec!(
-                format!("release_id={}", release_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("release_id", release_id)],
+        )
     }
 
     /// [Get the sources for a release of economic data.](https://fred.stlouisfed.org/docs/api/fred/release_sources.html)
     pub fn release_sources(release_id: usize) -> Result<ReleaseSources> { 
-        let response = response(
+        req(
             "release/sources",
-            vec!(
-                format!("release_id={}", release_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("release_id", release_id)],
+        )
     }
 
     /// [Get the tags for a release.](https://fred.stlouisfed.org/docs/api/fred/release_tags.html)
     pub fn release_tags(release_id: usize) -> Result<ReleaseTags> { 
-        let response = response(
+        req(
             "release/tags",
-            vec!(
-                format!("release_id={}", release_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("release_id", release_id)],
+        )
     }
 
     /// [Get the related tags for a release.](https://fred.stlouisfed.org/docs/api/fred/release_related_tags.html)
-    pub fn release_related_tags(release_id: usize, tag_names: &str) -> Result<ReleaseRelatedTags> { 
-        let response = response(
+    pub fn release_related_tags<T: std::fmt::Display>(release_id: T, tag_names: T) -> Result<ReleaseRelatedTags> { 
+        req(
             "release/related_tags",
-            vec!(
-                format!("release_id={}", release_id),
-                format!("tag_names={}", tag_names),
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("release_id", release_id), ("tag_names", tag_names)],
+        )
     }
 
     /// [Get the release tables for a given release.](https://fred.stlouisfed.org/docs/api/fred/release_tables.html)
     pub fn release_tables(release_id: usize) -> Result<ReleaseTables> { 
-        let response = response(
+        req(
             "release/tables",
-            vec!(
-                format!("release_id={}", release_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("release_id", release_id)],
+        )
     }
 
     /// [Get an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series.html)
     pub fn series(series_id: &str) -> Result<Series> { 
-        let response = response(
+        req(
             "series",
-            vec!(
-                format!("series_id={}", series_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("series_id", series_id)],
+        )
     }
 
     /// Return the series request as JSON. 
     pub fn series_json(series_id: &str) -> Result<String> {
-        let response = response(
+        req(
             "series",
-            vec!(
-                format!("series_id={}", series_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("series_id", series_id)],
+        )
     }
 
     /// [Get the categories for an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series_categories.html)
     pub fn series_categories(series_id: &str) -> Result<Categories> { 
-        let response = response(
+        req(
             "series/categories",
-            vec!(
-                format!("series_id={}", series_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("series_id", series_id)],
+        )
     }
 
     /// [Get the observations or data values for an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series_observations.html)
     pub fn series_observations(series_id: &str) -> Result<SeriesObservations> { 
-        let response = response(
+        req(
             "series/observations",
-            vec!(
-                format!("series_id={}", series_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("series_id", series_id)],
+        )
     }
 
     /// Return the series_observations request as JSON. 
     pub fn series_observations_json(series_id: &str) -> Result<String> {
-        let response = response(
+        req(
             "series/observations",
-            vec!(
-                format!("series_id={}", series_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("series_id", series_id)],
+        )
     }
 
     /// [Get the release for an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series_release.html)
     pub fn series_release(series_id: &str) -> Result<SeriesRelease>{ 
-        let response = response(
+        req(
             "series/release",
-            vec!(
-                format!("series_id={}", series_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("series_id", series_id)],
+        )
     }
 
     /// [Get economic data series that match keywords.](https://fred.stlouisfed.org/docs/api/fred/series_search.html)
     pub fn series_search(search_text: &str) -> Result<SeriesSearch> { 
-        let response = response(
+        req(
             "series/search",
-            vec!(
-                format!("search_text={}", search_text)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("search_text", search_text)],
+        )
     }
 
     /// [Get the tags for a series search.](https://fred.stlouisfed.org/docs/api/fred/series_search_tags.html)
     pub fn series_search_tags(series_search_text: &str) -> Result<SeriesSearchTags> { 
-        let response = response(
+        req(
             "series/search/tags",
-            vec!(
-                format!("series_search_text={}", series_search_text)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("series_search_text", series_search_text)],
+        )
     }
 
     /// [Get the related tags for a series search.](https://fred.stlouisfed.org/docs/api/fred/series_search_related_tags.html)
     pub fn series_search_related_tags(series_search_text: &str, tag_names: &str) -> Result<SeriesSearchRelatedTags> { 
-        let response = response(
+        req(
             "series/search/related_tags",
-            vec!(
-                format!("series_search_text={}", series_search_text),
-                format!("tag_names={}", tag_names),
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("series_search_text", series_search_text), ("tag_names", tag_names)],
+        )
     }
 
     /// [Get the tags for an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series_tags.html)
     /// ```
-    /// match Fred::series_tags("JPNCPIALLMINMEI") {
-    ///     Ok(series_tags) => println!("{}", series_tags),
-    ///     Err(json_err) => println!("{}", json_err),
-    /// }
+    /// let series_tags = Fred::series_tags("JPNCPIALLMINMEI")
+    ///     .umwrap_or_else{|e| eprintln!(e));
     /// ```
     pub fn series_tags(series_id: &str) -> Result<SeriesTags> { 
-        let response = response(
+        req(
             "series/tags",
-            vec!(
-                format!("series_id={}", series_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("series_id", series_id)],
+        )
     }
 
     /// [Get economic data series sorted by when observations were updated on the FRED® server.](https://fred.stlouisfed.org/docs/api/fred/series_updates.html)
     pub fn series_updates() -> Result<SeriesUpdates> { 
-        let response = response(
+        req(
             "series/updates",
-            Vec::new(),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            Vec::<(&'static str, String)>::new(),
+        )
     }
 
     /// [Get the dates in history when a series' data values were revised or new data values were released.](https://fred.stlouisfed.org/docs/api/fred/series_vintagedates.html)
     pub fn series_vintagedates(series_id: &str) -> Result<SeriesVintageDates> { 
-        let response = response(
+        req(
             "series/vintagedates",
-            vec!(
-                format!("series_id={}", series_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("series_id", series_id)],
+        )
     }
 
     /// [Get all sources of economic data.](https://fred.stlouisfed.org/docs/api/fred/sources.html)
     pub fn sources() -> Result<Sources> { 
-        let response = response(
+        req(
             "sources",
-            Vec::new(),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            Vec::<(&'static str, String)>::new(),
+        )
     }
 
     /// [Get a source of economic data.](https://fred.stlouisfed.org/docs/api/fred/source.html)
     pub fn source(source_id: usize) -> Result<ReleaseSources> { 
-        let response = response(
+        req(
             "source",
-            vec!(
-                format!("source_id={}", source_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("source_id", source_id)],
+        )
     }
 
     /// [Get the releases for a source.](https://fred.stlouisfed.org/docs/api/fred/source_releases.html)
     pub fn source_releases(source_id: usize) -> Result<SourceReleases> { 
-        let response = response(
+        req(
             "source/releases",
-            vec!(
-                format!("source_id={}", source_id)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("source_id", source_id)],
+        )
     }
 
     /// [Get all tags, search for tags, or get tags by name.](https://fred.stlouisfed.org/docs/api/fred/tags.html)
     pub fn tags() -> Result<Tags> { 
-        let response = response(
+        req(
             "tags",
-            Vec::new(),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            Vec::<(&'static str, String)>::new(),
+        )
     }
 
     /// [Get the related tags for one or more tags.](https://fred.stlouisfed.org/docs/api/fred/related_tags.html)
     pub fn related_tags(tag_names: &str) -> Result<Tags> { 
-        let response = response(
+        req(
             "related_tags",
-            vec!(
-                format!("tag_names={}", tag_names)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("tag_names", tag_names)],
+        )
     }
 
     /// [Get the series matching tags.](https://fred.stlouisfed.org/docs/api/fred/tags_series.html)
@@ -395,14 +304,27 @@ impl Fred {
     /// Fred::tags_series("cpi;usa;nation").unwrap().to_string()
     /// ```
     pub fn tags_series(tag_names: &str) -> Result<TagsSeries> { 
-        let response = response(
+        req(
             "tags/series",
-            vec!(
-                format!("tag_names={}", tag_names)
-            ),
-        )?;
-        serde_json::from_str(&response).map_err(|e| err_wrap!(e))
+            vec![("tag_names", tag_names)],
+        )
    } 
+}
+
+// This is the plumbing for the Fred functions. 
+
+fn req<T, U>(url: &str, keyvals: Vec<(&'static str, T)>) -> Result<U>
+where
+    T: Display,
+    U: DeserializeOwned,
+{
+    let req = Request::new(url, keyvals, Format::Json)?;
+
+    // Makes the network request.
+    let response = response(req)?;
+
+    // Coerces to the return type U
+    serde_json::from_str(&response).map_err(|_| err!(&format!("Failed to parse [{}]", response)))
 }
 
 // pub fn json<T: Display>(err: T) -> Error {
@@ -410,34 +332,102 @@ impl Fred {
 // }
 
 /// Construct a request and return the response.
-fn response(url: &str, keyvals: Vec<String>) -> Result<String> {
-    let request = request_str(url, keyvals);
-    let  blocking_response = reqwest::blocking::get(&request).map_err(|e| err_wrap!(e))?;
+fn response(request: Request) -> Result<String> {
+
+    let  blocking_response = reqwest::blocking::get(&request.to_string()).map_err(|e| err_wrap!(e))?;
 
     let response = blocking_response.text_with_charset("utf-8").map_err(|e| err_wrap!(e))?;
 
-    let first_line = response.lines().next().unwrap();
+    let first_line = match response.lines().next() {
+        Some(line) => line,
+        None => return Err(err!(&format!("Http response to [{}] was empty.", request))),
+    };
 
     if first_line.contains("error_code") {
-        return Err(err!(&format!("Http request failed with error [{}].", &response)))
+        return Err(err!(&format!("Http request [{}] failed with error [{}].", request, &response)))
     }
     Ok(response)
 }
 
-fn request_str(url: &str, keyvals: Vec<String>) -> String {
-    let mut s = format!(
-        "https://api.stlouisfed.org/fred/{}?",
-        url,
-    );
-    for kv in keyvals {
-        s.push_str(&kv);
-        s.push('&');
-    };
-    s.push_str(&format!(
-        "api_key={}&file_type=json",
-        env::var("FRED_API_KEY").unwrap(),
-    ));
-    s
+pub enum Format {
+    Json,
+    Xml,
+}
+
+impl fmt::Display for Format {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Format::Json => write!(f, "file_type=json"),
+            Format::Xml => write!(f, "file_type=xml"),
+        }
+    }
+}
+
+// Why do I use Vec<String> for keyvals and not some more typed value? The point of a Request is to
+// eventually produce a String. So we could do the conversion from a type (probably only a String
+// of an integer only) earlier of later. The main structure of the code in this module is to
+// minimize plumbing in the Fred request construction methods so as to reveal the important
+// information. So its best if we present typed arguments at this point, and then convert them into
+// Strings in the plumbing function req(). Only after this are the keyvals, in String form,
+// appended to the Request.
+pub struct Request {
+    url:        String,
+    keyvals:    Vec<String>,
+    api_key:    String,
+    format:     Format,
+}
+
+impl Request {
+
+    // The procedure for building a Request involves first setting the fields that are general for
+    // all requests, and then later appending key-values that are specific to each request (i.e.
+    // each Fred method). This explains the function arguments.
+    pub fn new<T: Display>(url: &str, keyvals: Vec<(&'static str, T)>, format: Format) -> Result<Self> {
+
+        let api_key = env::var("FRED_API_KEY").map_err(|_| err!("Expected FRED_API_KEY to be set"))?;
+
+        let kvs = keyvals.iter().map(|(key, val)| format!("{}={}", key, val)).collect(); 
+
+        Ok(
+            Request {
+                url:        url.into(),
+                keyvals:    kvs,  
+                api_key:    api_key,    
+                format:     format.into(),
+            }
+        )
+    }
+
+    // This function is unfortunate. I'm not comfortable with it. Surely there is a more concisely
+    // way to do such a simple task.
+    fn concat_keyvals(&self, sep: char) -> String {
+        let mut s = String::new();
+        for kv in &self.keyvals {
+            s.push_str(&kv);
+            s.push(sep);
+        }
+        s.pop();
+        s
+    }
+}
+
+// The string that we build is more for internal use (sending to a server) rather than for a user a
+// look at, but we'll do this anyway because it saves using ".to_string()". This function worked
+// out nicely in that the write!() indicates that the order which the key-values are presented in
+// the request might be important (as opposed to some concatenated Vec). Its not good that the
+// Display impl which is generally auxilliary contains important information like the base URL
+// however. TODO?
+impl fmt::Display for Request {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "https://api.stlouisfed.org/fred/{}?{}&api_key={}&{}",
+            self.url,
+            self.concat_keyvals('&'),
+            self.api_key,
+            self.format,
+        )
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -1198,7 +1188,7 @@ impl TagsSeries {
     }
 }
 
-impl fmt::Display for TagsSeries {
+impl Display for TagsSeries {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut series = String::new();
         for (i, s) in self.seriess.0.iter().enumerate() {
