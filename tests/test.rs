@@ -21,6 +21,12 @@ fn test_series_tags() {
     assert_eq!(series_tags.order_by, "series_count");
 }
 
+#[test]
+fn test_unwrap() {
+let series_tags = Fred::series_tags("JPNCPIALLMINMEI")
+    .unwrap_or_else(|e| eprintln!("{}", e));
+}
+
 // #[test]
 // fn category() {
 //     Fred::category(1);

@@ -2,8 +2,9 @@
 //! be stored as the environment variable FRED_API_KEY.
 //!
 //! See the `Fred` struct for examples.
+//!
 
-use err::*;
+use anyhow::{anyhow, Error};
 use keytree::serialize::{
     KeyTreeString,
     IntoKeyTree,
@@ -324,7 +325,7 @@ where
     let response = response(req)?;
 
     // Coerces to the return type U
-    serde_json::from_str(&response).map_err(|_| err!(&format!("Failed to parse [{}]", response)))
+    serde_json::from_str(&response).map_err(|_| anyhow!(format!("Failed to parse [{}]", response)))
 }
 
 // pub fn json<T: Display>(err: T) -> Error {
@@ -334,17 +335,17 @@ where
 /// Construct a request and return the response.
 fn response(request: Request) -> Result<String> {
 
-    let  blocking_response = reqwest::blocking::get(&request.to_string()).map_err(|e| err_wrap!(e))?;
+    let  blocking_response = reqwest::blocking::get(&request.to_string())?;
 
-    let response = blocking_response.text_with_charset("utf-8").map_err(|e| err_wrap!(e))?;
+    let response = blocking_response.text_with_charset("utf-8")?;
 
     let first_line = match response.lines().next() {
         Some(line) => line,
-        None => return Err(err!(&format!("Http response to [{}] was empty.", request))),
+        None => return Err(anyhow!(format!("Http response to [{}] was empty.", request))),
     };
 
     if first_line.contains("error_code") {
-        return Err(err!(&format!("Http request [{}] failed with error [{}].", request, &response)))
+        return Err(anyhow!(format!("Http request [{}] failed with error [{}].", request, &response)))
     }
     Ok(response)
 }
@@ -384,7 +385,7 @@ impl Request {
     // each Fred method). This explains the function arguments.
     pub fn new<T: Display>(url: &str, keyvals: Vec<(&'static str, T)>, format: Format) -> Result<Self> {
 
-        let api_key = env::var("FRED_API_KEY").map_err(|_| err!("Expected FRED_API_KEY to be set"))?;
+        let api_key = env::var("FRED_API_KEY").map_err(|_| anyhow!("Expected FRED_API_KEY to be set"))?;
 
         let kvs = keyvals.iter().map(|(key, val)| format!("{}={}", key, val)).collect(); 
 
