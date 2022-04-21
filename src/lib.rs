@@ -1,8 +1,5 @@
-//! [Fred API key](https://fred.stlouisfed.org/docs/api/api_key.html) needs to
-//! be stored as the environment variable FRED_API_KEY.
-//!
-//! See the `Fred` struct for examples.
-//!
+//! An API to [FRED Economic Data](https://fred.stlouisfed.org/). [Fred API key](https://fred.stlouisfed.org/docs/api/api_key.html)
+//! needs to be stored as the environment variable FRED_API_KEY. See the `Fred` struct for examples.
 
 use anyhow::{anyhow, Error};
 use keytree::serialize::{
