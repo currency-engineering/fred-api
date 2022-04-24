@@ -1,7 +1,7 @@
 //! An API to [FRED Economic Data](https://fred.stlouisfed.org/). [Fred API key](https://fred.stlouisfed.org/docs/api/api_key.html)
 //! needs to be stored as the environment variable FRED_API_KEY. See the `Fred` struct for examples.
 
-use anyhow::{anyhow, Error};
+use anyhow::{anyhow, Context, Result};
 use keytree::serialize::{
     KeyTreeString,
     IntoKeyTree,
@@ -14,13 +14,12 @@ use std::{
     iter::Iterator,
 };
 
-type Result<T> = std::result::Result<T, Error>;
-
+/// Encapsulate all the different types of API request.
 pub struct Fred;
 
 // The functions in this impl should concisely encapsulate information abou the requests together
-// with the response type, in a coded form. This passes off the plumbing to the req() functions. It
-// might be worth trying to make this into a macro.
+// with the response type, in a coded form. The functions pass off the plumbing to the req()
+// functions.
 impl Fred {
     /// [Get a category](https://fred.stlouisfed.org/docs/api/fred/category.html)
     /// ```
@@ -225,7 +224,7 @@ impl Fred {
     /// [Get the tags for an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series_tags.html)
     /// ```
     /// let series_tags = Fred::series_tags("JPNCPIALLMINMEI")
-    ///     .umwrap_or_else{|e| eprintln!(e));
+    ///     .unwrap_or_else{|e| eprintln!(e)};
     /// ```
     pub fn series_tags(series_id: &str) -> Result<SeriesTags> { 
         req(
@@ -309,7 +308,7 @@ impl Fred {
    } 
 }
 
-// This is the plumbing for the Fred functions. 
+// This is the plumbing for the Fred API request functions. 
 
 fn req<T, U>(url: &str, keyvals: Vec<(&'static str, T)>) -> Result<U>
 where
@@ -322,12 +321,8 @@ where
     let response = response(req)?;
 
     // Coerces to the return type U
-    serde_json::from_str(&response).map_err(|_| anyhow!(format!("Failed to parse [{}]", response)))
+    serde_json::from_str(&response).context(format!("Failed to parse [{}]", response))
 }
-
-// pub fn json<T: Display>(err: T) -> Error {
-//     failed_to_parse_json(&err.to_string())
-// }
 
 /// Construct a request and return the response.
 fn response(request: Request) -> Result<String> {
@@ -361,13 +356,6 @@ impl fmt::Display for Format {
     }
 }
 
-// Why do I use Vec<String> for keyvals and not some more typed value? The point of a Request is to
-// eventually produce a String. So we could do the conversion from a type (probably only a String
-// of an integer only) earlier of later. The main structure of the code in this module is to
-// minimize plumbing in the Fred request construction methods so as to reveal the important
-// information. So its best if we present typed arguments at this point, and then convert them into
-// Strings in the plumbing function req(). Only after this are the keyvals, in String form,
-// appended to the Request.
 pub struct Request {
     url:        String,
     keyvals:    Vec<String>,
@@ -381,11 +369,8 @@ impl Request {
     // all requests, and then later appending key-values that are specific to each request (i.e.
     // each Fred method). This explains the function arguments.
     pub fn new<T: Display>(url: &str, keyvals: Vec<(&'static str, T)>, format: Format) -> Result<Self> {
-
         let api_key = env::var("FRED_API_KEY").map_err(|_| anyhow!("Expected FRED_API_KEY to be set"))?;
-
         let kvs = keyvals.iter().map(|(key, val)| format!("{}={}", key, val)).collect(); 
-
         Ok(
             Request {
                 url:        url.into(),
@@ -396,8 +381,6 @@ impl Request {
         )
     }
 
-    // This function is unfortunate. I'm not comfortable with it. Surely there is a more concisely
-    // way to do such a simple task.
     fn concat_keyvals(&self, sep: char) -> String {
         let mut s = String::new();
         for kv in &self.keyvals {
@@ -409,12 +392,6 @@ impl Request {
     }
 }
 
-// The string that we build is more for internal use (sending to a server) rather than for a user a
-// look at, but we'll do this anyway because it saves using ".to_string()". This function worked
-// out nicely in that the write!() indicates that the order which the key-values are presented in
-// the request might be important (as opposed to some concatenated Vec). Its not good that the
-// Display impl which is generally auxilliary contains important information like the base URL
-// however. TODO?
 impl fmt::Display for Request {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -428,9 +405,11 @@ impl fmt::Display for Request {
     }
 }
 
+// Response data-structures ///////////////////////////////////////////////////////////////////////
+
 #[derive(Debug, Deserialize)]
 pub struct Categories {
-    pub categories:                 Vec<Category>,
+    pub categories: Vec<Category>,
 }
 
 impl fmt::Display for Categories {
@@ -495,7 +474,6 @@ impl<'a> Iterator for SeriesItemsIter<'a> {
         }
     }
 }
-
 
 #[derive(Debug, Deserialize)]
 pub struct SeriesItems(Vec<SeriesItem>);
