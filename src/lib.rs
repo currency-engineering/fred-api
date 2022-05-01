@@ -18,13 +18,65 @@ use std::{
     iter::Iterator,
 };
 
+// We want to create an iterator by giving it a closure like `|id| category_id(id)`,
+// and a Vec<args> (Vec<usize> in this case). What is library side and what is user side?
+// We can pass the arguments as a single argument
+
+/// An iterator that makes a group of API requests.
+///
+/// To make a group of requests we can build a `FredClientIter` from a collection of request
+/// arguments and specify a requestion function as a closure, for example
+/// ```
+/// let iter = FredClientIter::new(vec![1, 2, 3].iter(), |id| category_id(id));
+/// ```
+/// If there are multiple arguments we can do
+/// ```
+/// let iter = FredClientIter::new(
+///     vec![(1, "tag1"), (2, "tag2")].iter(),
+///     |(id, tag)| category_related_tags(id, tag),
+/// );
+/// ```
+pub struct FredClientIter<ArgsIter, F, U>
+where
+    // Any iterator such as vec![1, 2, 3].iter() in the example above. 
+    ArgsIter: Iterator,
+    // A function such as `category_id(id) -> Result<Categories>`
+    F: Fn(<ArgsIter as Iterator>::Item) -> Result<U>,
+{
+    args_iter: ArgsIter,
+    f: F,
+}
+
+impl<ArgsIter, F, U> FredClientIter<ArgsIter, F, U>
+where
+    ArgsIter: Iterator,
+    F: Fn(<ArgsIter as Iterator>::Item) -> Result<U>,
+{
+    pub fn new(args_iter: ArgsIter, f: F) -> FredClientIter<ArgsIter, F, U>
+    {
+        FredClientIter { args_iter, f }
+    }
+}
+
+impl<ArgsIter, F, U> Iterator for FredClientIter<ArgsIter, F, U>
+where
+    ArgsIter: Iterator,
+    F: Fn(<ArgsIter as Iterator>::Item) -> Result<U>,
+{
+    type Item = Result<U, Error>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.args_iter.next().map(|args| (&self.f)(args))
+    }
+}
+
 /// Encapsulate all the different types of API request.
-pub struct Fred;
+pub struct FredClient;
 
 // The functions in this impl should concisely encapsulate information abou the requests together
 // with the response type, in a coded form. The functions pass off the plumbing to the req()
 // functions.
-impl Fred {
+impl FredClient {
     /// [Get a category](https://fred.stlouisfed.org/docs/api/fred/category.html)
     /// ```
     /// for i in 0..100 {
@@ -902,7 +954,7 @@ impl SeriesItem {
     }
 
     pub fn tags(&self) -> String {
-        Fred::series_tags(&self.id).unwrap().one_line()
+        FredClient::series_tags(&self.id).unwrap().one_line()
     }
 }
 
@@ -1203,5 +1255,17 @@ impl Display for TagsSeries {
             series.push('\n');
         };
         write!(f, "{}", series)
+    }
+}
+
+mod test {
+    use crate::{
+        FredClient,
+        FredClientIter,
+    };
+
+    #[test]
+    fn fred_client_iter_works() {
+        let iter = FredClientIter::new(vec![1, 2, 3].iter(), |id| FredClient::category(*id));
     }
 }

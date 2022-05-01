@@ -1,30 +1,13 @@
 use fred_api::{
     Format,
-    Fred,
-    Request,
+    FredClient,
 };
 
 #[test]
-fn series_tags_request() {
-
-    let req = Request::new("series/tags", vec![("series_id", "JPNCPIALLMINMEI")], Format::Json)
-        .unwrap()
-        .to_string();
-
-    assert!(req.starts_with("https://api.stlouisfed.org/fred/series/tags?series_id=JPNCPIALLMINMEI&api_key="));
-    assert!(req.ends_with("&file_type=json"));
-}
-
-#[test]
-fn test_series_tags() {
-    let series_tags = Fred::series_tags("JPNCPIALLMINMEI").unwrap();
+fn series_tags_request_works() {
+    let series_tags = FredClient::series_tags("JPNCPIALLMINMEI").unwrap();
+    assert!(!series_tags.realtime_start.is_empty());
     assert_eq!(series_tags.order_by, "series_count");
-}
-
-#[test]
-fn test_unwrap() {
-let series_tags = Fred::series_tags("JPNCPIALLMINMEI")
-    .unwrap_or_else(|e| eprintln!("{}", e));
 }
 
 // #[test]
