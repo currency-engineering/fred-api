@@ -102,182 +102,134 @@ impl FredClient {
     /// }
     /// ```
     pub fn category(category_id: usize) -> Result<Categories> { 
-        req(
-            FredRequest::new("category", vec![("category_id", category_id)])?
-        )
+        req(FredRequest::new("category", vec![("category_id", category_id)])?)
     }
 
     /// [Get the child categories for a specified parent category.](https://fred.stlouisfed.org/docs/api/fred/category_children.html)
     pub fn category_children(category_id: usize) -> Result<Categories> {
-        req(
-            FredRequest::new("category/children", vec![("category_id", category_id)])?
-        )
+        req(FredRequest::new("category/children", vec![("category_id", category_id)])?)
     }
     
     /// [Get the related categories for a category.](https://fred.stlouisfed.org/docs/api/fred/category_related.html)
     pub fn category_related(category_id: usize) -> Result<Categories> {
-        req(
-            FredRequest::new("category/related", vec![("category_id", category_id)])?
-        )
+        req(FredRequest::new("category/related", vec![("category_id", category_id)])?)
     }
     
     /// [Get the series in a category.](https://fred.stlouisfed.org/docs/api/fred/category_series.html)
     pub fn category_series(category_id: usize) -> Result<CategorySeries> {
-        req(
-            FredRequest::new("category/series", vec![("category_id", category_id)])?
-        )
+        req(FredRequest::new("category/series", vec![("category_id", category_id)])?)
     }
     
     /// [Get the tags for a category.](https://fred.stlouisfed.org/docs/api/fred/category_tags.html)
     pub fn category_tags(category_id: usize) -> Result<CategoryTags> {
-        req(
-            FredRequest::new("category/tags", vec![("category_id", category_id)])?
-        )
+        req(FredRequest::new("category/tags", vec![("category_id", category_id)])?)
     }
     
     /// [Get the related tags for a category.](https://fred.stlouisfed.org/docs/api/fred/category_related_tags.html)
     pub fn category_related_tags<T: std::fmt::Display>(category_id: T, tag_names: T) -> Result<CategoryRelatedTags> {
-        req(
-            FredRequest::new(
-                "category/related_tags",
-                vec![("category_id", category_id), ("tag_names", tag_names)],
-            )?
-        )
+        req(FredRequest::new(
+            "category/related_tags",
+            vec![("category_id", category_id), ("tag_names", tag_names)],
+        )?)
     }
 
     /// [Get all releases of economic data.](https://fred.stlouisfed.org/docs/api/fred/releases.html)
     pub fn releases() -> Result<Releases> { 
-        req(
-            FredRequest::new(
-                "releases",
-                Vec::<(&'static str, String)>::new(),
-            )?
-        )
+        req(FredRequest::new(
+            "releases",
+            Vec::<(&'static str, String)>::new(),
+        )?)
     }
 
     /// [Get release dates for all releases of economic data.](https://fred.stlouisfed.org/docs/api/fred/releases_dates.html)
     pub fn releases_dates() -> Result<ReleaseDates> { 
-        req(
-            FredRequest::new("releases/dates", Vec::<(&'static str, String)>::new())?
-        )
+        req(FredRequest::new("releases/dates", Vec::<(&'static str, String)>::new())?)
     }
 
     /// [Get a release of economic data.](https://fred.stlouisfed.org/docs/api/fred/release.html)
     pub fn release(release_id: usize) -> Result<Release> { 
-        req(
-            FredRequest::new( "release", vec![("release_id", release_id)])?
-        )
+        req(FredRequest::new( "release", vec![("release_id", release_id)])?)
     }
 
     /// [Get release dates for a release of economic data.](https://fred.stlouisfed.org/docs/api/fred/release_dates.html)
     pub fn release_dates(release_id: usize) -> Result<ReleaseDates> { 
-        req(
-            FredRequest::new("release/dates", vec![("release_id", release_id)])?
-        )
+        req(FredRequest::new("release/dates", vec![("release_id", release_id)])?)
     }
 
     /// [Get the series on a release of economic data.](https://fred.stlouisfed.org/docs/api/fred/release_series.html)
     pub fn release_series(release_id: usize) -> Result<ReleaseSeries> { 
-        req(
-            FredRequest::new("release/series", vec![("release_id", release_id)])?
-        )
+        req(FredRequest::new("release/series", vec![("release_id", release_id)])?)
     }
 
     /// [Get the sources for a release of economic data.](https://fred.stlouisfed.org/docs/api/fred/release_sources.html)
     pub fn release_sources(release_id: usize) -> Result<ReleaseSources> { 
-        req(
-            FredRequest::new("release/sources", vec![("release_id", release_id)])?
-        )
+        req(FredRequest::new("release/sources", vec![("release_id", release_id)])?)
     }
 
     /// [Get the tags for a release.](https://fred.stlouisfed.org/docs/api/fred/release_tags.html)
     pub fn release_tags(release_id: usize) -> Result<ReleaseTags> { 
-        req(
-            FredRequest::new("release/tags", vec![("release_id", release_id)])?
-        )
+        req(FredRequest::new("release/tags", vec![("release_id", release_id)])?)
     }
 
     /// [Get the related tags for a release.](https://fred.stlouisfed.org/docs/api/fred/release_related_tags.html)
     pub fn release_related_tags<T: std::fmt::Display>(release_id: T, tag_names: T) -> Result<ReleaseRelatedTags> { 
-        req(
-            FredRequest::new(
-                "release/related_tags",
-                vec![("release_id", release_id), ("tag_names", tag_names)],
-            )?
-        )
+        req(FredRequest::new(
+            "release/related_tags",
+            vec![("release_id", release_id), ("tag_names", tag_names)],
+        )?)
     }
 
     /// [Get the release tables for a given release.](https://fred.stlouisfed.org/docs/api/fred/release_tables.html)
     pub fn release_tables(release_id: usize) -> Result<ReleaseTables> { 
-        req(
-            FredRequest::new("release/tables", vec![("release_id", release_id)])?
-        )
+        req(FredRequest::new("release/tables", vec![("release_id", release_id)])?)
     }
 
     /// [Get an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series.html)
     pub fn series(series_id: &str) -> Result<Series> { 
-        req(
-            FredRequest::new("series", vec![("series_id", series_id)])?
-        )
+        req(FredRequest::new("series", vec![("series_id", series_id)])?)
     }
 
     /// Return the series request as JSON. 
     pub fn series_json(series_id: &str) -> Result<String> {
-        req(
-            FredRequest::new("series", vec![("series_id", series_id)])?
-        )
+        req(FredRequest::new("series", vec![("series_id", series_id)])?)
     }
 
     /// [Get the categories for an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series_categories.html)
     pub fn series_categories(series_id: &str) -> Result<Categories> { 
-        req(
-            FredRequest::new("series/categories", vec![("series_id", series_id)])?
-        )
+        req(FredRequest::new("series/categories", vec![("series_id", series_id)])?)
     }
 
     /// [Get the observations or data values for an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series_observations.html)
     pub fn series_observations(series_id: &str) -> Result<SeriesObservations> { 
-        req(
-            FredRequest::new("series/observations", vec![("series_id", series_id)])?
-        )
+        req(FredRequest::new("series/observations", vec![("series_id", series_id)])?)
     }
 
     /// Return the series_observations request as JSON. 
     pub fn series_observations_json(series_id: &str) -> Result<String> {
-        req(
-            FredRequest::new("series/observations", vec![("series_id", series_id)])?
-        )
+        req(FredRequest::new("series/observations", vec![("series_id", series_id)])?)
     }
 
     /// [Get the release for an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series_release.html)
     pub fn series_release(series_id: &str) -> Result<SeriesRelease>{ 
-        req(
-            FredRequest::new("series/release", vec![("series_id", series_id)])?
-        )
+        req(FredRequest::new("series/release", vec![("series_id", series_id)])?)
     }
 
     /// [Get economic data series that match keywords.](https://fred.stlouisfed.org/docs/api/fred/series_search.html)
     pub fn series_search(search_text: &str) -> Result<SeriesSearch> { 
-        req(
-            FredRequest::new("series/search", vec![("search_text", search_text)])?
-        )
+        req(FredRequest::new("series/search", vec![("search_text", search_text)])?)
     }
 
     /// [Get the tags for a series search.](https://fred.stlouisfed.org/docs/api/fred/series_search_tags.html)
     pub fn series_search_tags(series_search_text: &str) -> Result<SeriesSearchTags> { 
-        req(
-            FredRequest::new("series/search/tags", vec![("series_search_text", series_search_text)])?
-        )
+        req(FredRequest::new("series/search/tags", vec![("series_search_text", series_search_text)])?)
     }
 
     /// [Get the related tags for a series search.](https://fred.stlouisfed.org/docs/api/fred/series_search_related_tags.html)
     pub fn series_search_related_tags(series_search_text: &str, tag_names: &str) -> Result<SeriesSearchRelatedTags> { 
-        req(
-            FredRequest::new(
-                "series/search/related_tags",
-                vec![("series_search_text", series_search_text), ("tag_names", tag_names)],
-            )?
-        )
+        req(FredRequest::new(
+            "series/search/related_tags",
+            vec![("series_search_text", series_search_text), ("tag_names", tag_names)],
+        )?)
     }
 
     /// [Get the tags for an economic data series.](https://fred.stlouisfed.org/docs/api/fred/series_tags.html)
@@ -286,58 +238,42 @@ impl FredClient {
     ///     .unwrap_or_else{|e| eprintln!(e)};
     /// ```
     pub fn series_tags(series_id: &str) -> Result<SeriesTags> { 
-        req(
-            FredRequest::new("series/tags", vec![("series_id", series_id)])?
-        )
+        req(FredRequest::new("series/tags", vec![("series_id", series_id)])?)
     }
 
     /// [Get economic data series sorted by when observations were updated on the FRED® server.](https://fred.stlouisfed.org/docs/api/fred/series_updates.html)
     pub fn series_updates() -> Result<SeriesUpdates> { 
-        req(
-            FredRequest::new("series/updates", Vec::<(&'static str, String)>::new())?
-        )
+        req(FredRequest::new("series/updates", Vec::<(&'static str, String)>::new())?)
     }
 
     /// [Get the dates in history when a series' data values were revised or new data values were released.](https://fred.stlouisfed.org/docs/api/fred/series_vintagedates.html)
     pub fn series_vintagedates(series_id: &str) -> Result<SeriesVintageDates> { 
-        req(
-            FredRequest::new("series/vintagedates", vec![("series_id", series_id)])?
-        )
+        req(FredRequest::new("series/vintagedates", vec![("series_id", series_id)])?)
     }
 
     /// [Get all sources of economic data.](https://fred.stlouisfed.org/docs/api/fred/sources.html)
     pub fn sources() -> Result<Sources> { 
-        req(
-            FredRequest::new("sources", Vec::<(&'static str, String)>::new())?
-        )
+        req(FredRequest::new("sources", Vec::<(&'static str, String)>::new())?)
     }
 
     /// [Get a source of economic data.](https://fred.stlouisfed.org/docs/api/fred/source.html)
     pub fn source(source_id: usize) -> Result<ReleaseSources> { 
-        req(
-            FredRequest::new("source", vec![("source_id", source_id)])?
-        )
+        req(FredRequest::new("source", vec![("source_id", source_id)])?)
     }
 
     /// [Get the releases for a source.](https://fred.stlouisfed.org/docs/api/fred/source_releases.html)
     pub fn source_releases(source_id: usize) -> Result<SourceReleases> { 
-        req(
-            FredRequest::new("source/releases", vec![("source_id", source_id)])?
-        )
+        req(FredRequest::new("source/releases", vec![("source_id", source_id)])?)
     }
 
     /// [Get all tags, search for tags, or get tags by name.](https://fred.stlouisfed.org/docs/api/fred/tags.html)
     pub fn tags() -> Result<Tags> { 
-        req(
-            FredRequest::new("tags", Vec::<(&'static str, String)>::new())?
-        )
+        req(FredRequest::new("tags", Vec::<(&'static str, String)>::new())?)
     }
 
     /// [Get the related tags for one or more tags.](https://fred.stlouisfed.org/docs/api/fred/related_tags.html)
     pub fn related_tags(tag_names: &str) -> Result<Tags> { 
-        req(
-            FredRequest::new("related_tags", vec![("tag_names", tag_names)])?
-        )
+        req(FredRequest::new("related_tags", vec![("tag_names", tag_names)])?)
     }
 
     /// [Get the series matching tags.](https://fred.stlouisfed.org/docs/api/fred/tags_series.html)
@@ -352,9 +288,7 @@ impl FredClient {
     /// Fred::tags_series("cpi;usa;nation").unwrap().to_string()
     /// ```
     pub fn tags_series(tag_names: &str) -> Result<TagsSeries> { 
-        req(
-            FredRequest::new( "tags/series", vec![("tag_names", tag_names)])?
-        )
+        req(FredRequest::new( "tags/series", vec![("tag_names", tag_names)])?)
    } 
 }
 
