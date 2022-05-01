@@ -1,9 +1,24 @@
-//! An API to [FRED Economic Data](https://fred.stlouisfed.org/). [Fred API key](https://fred.stlouisfed.org/docs/api/api_key.html)
-//! needs to be stored as the environment variable FRED_API_KEY. See the `Fred` struct for examples.
+//! An API to [FRED Economic Data](https://fred.stlouisfed.org/). [FRED API key](https://fred.stlouisfed.org/docs/api/api_key.html)
+//! needs to be stored as the environment variable `FRED_API_KEY`. Only `JSON` response format is
+//! implemented.
+//!
+//! ### Examples
+//!
+//! To make a single request,
+//! ```
+//! let series_tags = FredClient::series_tags("JPNCPIALLMINMEI").unwrap();
+//! ```
+//!
+//! To make multiple pipelined requests,
+//! ```
+//! let iter = FredClientIter::new(vec![1, 2, 3].iter(), |id| category_id(id));
+//! let responses = FredClient::pipeline(iter);
+//! ```
 
 // We need to be able to specify the return type of a request. To do this the user builds functions
 // with arbitrary arguments and arbitrary return types. These functions internally call req() which
 // makes the requests and coerce into return type.
+//
 
 use anyhow::{anyhow, Context, Error, Result};
 use keytree::serialize::{
@@ -393,9 +408,12 @@ fn response<R: IntoRequest>(into_req: R) -> Result<String> {
     Ok(response)
 }
 
+/// Response format can be JSON or XML.
 #[derive(Debug)]
 pub enum Format {
+    /// JSON
     Json,
+    /// XML
     Xml,
 }
 
@@ -408,6 +426,7 @@ impl fmt::Display for Format {
     }
 }
 
+/// A trait for types that can be converted into an HTTP request string.
 pub trait IntoRequest {
     fn into_request(&self) -> Result<String>;
 
