@@ -33,14 +33,10 @@ use std::{
     iter::Iterator,
 };
 
-// We want to create an iterator by giving it a closure like `|id| category_id(id)`,
-// and a Vec<args> (Vec<usize> in this case). What is library side and what is user side?
-// We can pass the arguments as a single argument
-
-/// An iterator that makes a group of API requests.
+/// An iterator that makes a series of API requests.
 ///
-/// To make a group of requests we can build a `FredClientIter` from a collection of request
-/// arguments and specify a requestion function as a closure, for example
+/// To make a group of requests we can build a `FredClientIter` from a iterator over request
+/// arguments and specify a request function on those argyments, for example
 /// ```
 /// let iter = FredClientIter::new(vec![1, 2, 3].iter(), |id| category_id(id));
 /// ```
@@ -363,9 +359,7 @@ impl fmt::Display for Format {
 /// A trait for types that can be converted into an HTTP request string.
 pub trait IntoRequest {
     fn into_request(&self) -> Result<String>;
-
     fn base_url(&self) -> Result<String>;
-
     fn api_key(&self) -> Result<String>;
 }
 
@@ -384,9 +378,7 @@ impl IntoRequest for FredRequest {
     }
 
     fn base_url(&self) -> Result<String> {
-        Ok(
-            "https://api.stlouisfed.org/".into()
-        )
+        Ok("https://api.stlouisfed.org/".into())
     }
 
     fn api_key(&self) -> Result<String> {
@@ -482,14 +474,14 @@ impl fmt::Display for Category {
 /// See [Fred docs: /fred/category/children](https://fred.stlouisfed.org/docs/api/fred/category_children.html).
 #[derive(Debug, Deserialize)]
 pub struct CategoryChildren {
-    pub categories:                 Vec<Category>,
+    pub categories: Vec<Category>,
 }
 
 /// See [Fred docs: /fred/category/related](https://fred.stlouisfed.org/docs/api/fred/category_related.html).
 #[derive(Debug, Deserialize)]
 pub struct CategoryRelated {
     #[allow(dead_code)]
-    categories:                     Vec<Category>,
+    categories: Vec<Category>,
 }
 
 pub struct SeriesItemsIter<'a> {
@@ -1211,6 +1203,7 @@ impl Display for TagsSeries {
     }
 }
 
+#[cfg(test)]
 mod test {
     use crate::{
         FredClient,
