@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0.56"
 futures = "0.3.21"
-keytree = { git = "https://github.com/currency-engineering/keytree" }
+keytree = { git = "https://github.com/currency-engineering/key-tree" }
 rand = "0.8.0"
 reqwest = { version = "0.10", features = ["blocking", "json"] }
 serde = { version = "1.0", features = ["derive"] }
