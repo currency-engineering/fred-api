@@ -21,7 +21,7 @@
 //
 
 use anyhow::{anyhow, Context, Error, Result};
-use keytree::serialize::{
+use key_tree::serialize::{
     KeyTreeString,
     IntoKeyTree,
 };
